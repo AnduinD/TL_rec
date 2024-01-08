@@ -1,3 +1,4 @@
+# main.py
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -41,6 +42,7 @@ def main():
 
             outputs = model(data)
             print(outputs, label)
+            outputs = (outputs > 0.5).float()
 
             total += label.shape[0]
             correct += (outputs == label).sum().item()

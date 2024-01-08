@@ -1,3 +1,4 @@
+# model.py
 import torch
 import torch.nn as nn
 from torch.nn.parameter import Parameter
@@ -34,14 +35,11 @@ class TL_Net(nn.Module):
         self.fc1  = nn.Linear(in_channel, hidden_channel)
         self.act  = act()
         self.fc2  = nn.Linear(hidden_channel, out_channel)
-        self.class_thresh = Parameter(torch.Tensor([0.5,]))
+        # self.class_thresh = Parameter(torch.rand(1))
+        # self.class_thresh = Parameter(torch.Tensor([0.5,]))
 
     def forward(self, x):
         x = x.float().flatten(1)
         x = self.act(self.fc1(x), stage="hidden")
         x = self.act(self.fc2(x), stage="output")
-        if self.training:
-            return x
-        # import pdb;pdb.set_trace()
-        else:
-            return (x > self.class_thresh).float()
+        return x
