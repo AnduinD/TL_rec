@@ -12,13 +12,14 @@ class act(nn.Module):
     '''
     def __init__(self,factor=1.):
         super(act, self).__init__()
-        self.a = Parameter(torch.Tensor([factor,]))
+        # self.alpha = Parameter(torch.Tensor([factor,]))
+        self.alpha = factor
         self.stages = ['hidden', 'output']
 
     def hidden_act(self,x):
-        return 2/(1+torch.pow(torch.e,-self.a*x)) -1
+        return 2/(1+torch.pow(torch.e,-self.alpha*x))-1
     def output_act(self,x):
-        return 1/(1+torch.pow(torch.e,-self.a*x))
+        return 1/(1+torch.pow(torch.e,-self.alpha*x))
 
     def forward(self,x,stage='hidden'):
         assert stage in self.stages
@@ -30,10 +31,10 @@ class act(nn.Module):
 
 
 class TL_Net(nn.Module):
-    def __init__(self, in_channel=9, hidden_channel=3, out_channel=1):
+    def __init__(self, in_channel=9, hidden_channel=3, out_channel=1, **kwargs):
         super(TL_Net, self).__init__()
         self.fc1  = nn.Linear(in_channel, hidden_channel)
-        self.act  = act()
+        self.act  = act(**kwargs)
         self.fc2  = nn.Linear(hidden_channel, out_channel)
         # self.class_thresh = Parameter(torch.rand(1))
         # self.class_thresh = Parameter(torch.Tensor([0.5,]))

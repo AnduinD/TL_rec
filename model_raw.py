@@ -3,19 +3,7 @@ import numpy as np
 
 def basic_act(x):
     return 1/(1+np.e**(-x))
-    
-class basic_layer:
-    def __init__(self):
-        self.param={}
-    def __call__(self, x):
-        return x
-    def forward(self, x):
-        return self.__call__(x)
-    
-    def backward(self, x, y, lr=0.1):
-        y_=self.forward(x)
-        delta=y-y_
-        return delta
+
     
 class neuron:
     def __init__(self, in_channel=9, out_channel=3, act=basic_act):
@@ -24,7 +12,6 @@ class neuron:
         self.act = act
 
     def __call__(self, x, **kwargs):
-        # x = x.reshape((x.shape[0],-1))
         x = x.reshape(-1)
         return self.act(np.dot(x, self.weight) + self.bias, **kwargs)
     def forward(self, x, **kwargs):
@@ -46,12 +33,12 @@ class MLP:
             return act(alpha*x)
         self.alpha = alpha
 
-        self.fc1  = neuron(in_channel, hidden_channel,hid_act)
-        self.fc2  = neuron(hidden_channel, out_channel,out_act)
+        self.unit1 = neuron(in_channel, hidden_channel, hid_act)
+        self.unit2 = neuron(hidden_channel, out_channel,out_act)
 
     def __call__(self, x):
-        x = self.fc1(x, alpha=self.alpha)
-        x = self.fc2(x, alpha=self.alpha)
+        x = self.unit1(x, alpha=self.alpha)
+        x = self.unit2(x, alpha=self.alpha)
         return x
     def forward(self, x):
         return self.__call__(x)
@@ -59,17 +46,14 @@ class MLP:
     def backward(self, x, y, lr=0.1):
         x = x.reshape(-1)
         y_ = self.forward(x)
-        self.fc2.error = y - y_
-        self.fc2.delta = self.fc2.error*y_*(1-y_)*self.alpha
+        self.unit2.error = y - y_ # 1,
+        self.unit2.delta = self.unit2.error*y_*(1-y_)*self.alpha # 1,
 
-        y__ = self.fc1(x)
-        self.fc1.error = np.dot(self.fc2.weight, self.fc2.delta)
-        self.fc1.delta = self.fc1.error*2*y__*(1-y__)*self.alpha
+        y__ = self.unit1(x)
+        self.unit1.error = np.dot(self.unit2.weight, self.unit2.delta) # 3,
+        self.unit1.delta = self.unit1.error*2*y__*(1-y__)*self.alpha # 3,
         
-        self.fc2.weight += lr*self.fc2.delta*np.atleast_2d(y__).T
-        self.fc2.bias   += lr*self.fc2.delta
-        self.fc1.weight += lr*self.fc1.delta*np.atleast_2d(x).T
-        self.fc1.bias   += lr*self.fc1.delta
-
-        # return self.fc1.delta
-
+        self.unit2.weight += lr*self.unit2.delta*np.atleast_2d(y__).T # 3,1
+        self.unit2.bias   += lr*self.unit2.delta
+        self.unit1.weight += lr*self.unit1.delta*np.atleast_2d(x).T # 9,3
+        self.unit1.bias   += lr*self.unit1.delta
